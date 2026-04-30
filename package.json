@@ -1,0 +1,19 @@
+{
+  "name": "gamelog",
+  "version": "1.0.0",
+  "description": "Biblioteca personal de videojuegos. Registra tus juegos, sesiones de juego y estadísticas en un solo lugar.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "directories": {
+    "doc": "docs"
+  },
+  "devDependencies": {
+    "@vercel/node": "^5.7.13",
+    "uuid": "^14.0.0"
+  }
+}
