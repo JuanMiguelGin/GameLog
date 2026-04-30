@@ -4,7 +4,7 @@
   "installCommand": "npm install && npm install --prefix client",
   "functions": {
     "api/**/*.ts": {
-      "runtime": "nodejs20.x"
+      "runtime": "@vercel/node@5.7.13"
     }
   },
   "rewrites": [
