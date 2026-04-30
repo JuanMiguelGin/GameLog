@@ -1,4 +1,4 @@
-import { useGames } from '../context/GamesContext'
+import { useGames } from '../context/useGames'
 import { formatHours, formatDate } from '../utils'
 
 export default function SessionsPage() {

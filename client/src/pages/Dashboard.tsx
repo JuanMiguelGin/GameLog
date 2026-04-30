@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useGames } from '../context/GamesContext'
+import { useGames } from '../context/useGames'
 import StatCard from '../components/StatCard'
 import { formatHours, formatDate } from '../utils'
 

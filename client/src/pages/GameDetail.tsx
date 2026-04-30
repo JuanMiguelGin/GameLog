@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useGames } from '../context/GamesContext'
+import { useGames } from '../context/useGames'
 import StatusBadge from '../components/StatusBadge'
 import GameForm from '../components/GameForm'
 import SessionForm from '../components/SessionForm'

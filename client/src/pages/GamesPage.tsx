@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { useGames } from '../context/GamesContext'
+import { useGames } from '../context/useGames'
 import { useGamesFilter } from '../hooks/useGamesFilter'
 import GameCard from '../components/GameCard'
 import type { GameStatus } from '../types'

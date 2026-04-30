@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { useGames } from '../context/GamesContext'
+import { useGames } from '../context/useGames'
 import GameForm from '../components/GameForm'
 import type { CreateGameDTO } from '../types'
 
