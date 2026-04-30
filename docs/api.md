@@ -3,10 +3,13 @@
 ## Base URL
 
 ```
-http://localhost:3001/api/v1
+/api/v1
 ```
 
-En producción se configura con la variable de entorno `VITE_API_URL` en el frontend.
+En local puedes usar:
+
+- `http://localhost:3001/api/v1` (si arrancas el backend Express en `server/`)
+- `/api/v1` (en producción en Vercel)
 
 ## Formato de respuesta
 
@@ -231,13 +234,6 @@ Elimina una sesión y resta sus horas del `totalHours` del juego correspondiente
 
 ---
 
-## Health check
+## Health check (solo backend Express local)
 
-### GET /health
-
-Comprueba que la API está funcionando.
-
-**Response 200:**
-```json
-{ "status": "ok" }
-```
+El endpoint `GET /health` existe únicamente si usas el backend Express de `server/` en local.

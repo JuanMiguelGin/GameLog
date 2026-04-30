@@ -12,8 +12,7 @@ Todas las pruebas de API se hicieron accediendo a las URLs directamente en el na
 
 | Endpoint | Prueba | Resultado |
 |----------|--------|-----------|
-| GET /health | Acceder a localhost:3001/health | ✅ Devuelve `{"status":"ok"}` |
-| GET /api/v1/games | Acceder a localhost:3001/api/v1/games | ✅ Devuelve los juegos precargados |
+| GET /api/v1/games | Acceder a `/api/v1/games` (en Vercel) o `localhost:3001/api/v1/games` (local) | ✅ Devuelve los juegos precargados |
 | POST /api/v1/games | Crear un juego desde el formulario | ✅ Aparece en la biblioteca |
 | PATCH /api/v1/games/:id | Editar un juego desde el detalle | ✅ Se actualiza correctamente |
 | DELETE /api/v1/games/:id | Eliminar un juego | ✅ Desaparece de la lista y sus sesiones también |

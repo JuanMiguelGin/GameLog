@@ -2,16 +2,16 @@
 
 ## Visión general
 
-GameLog es una aplicación fullstack con el frontend y el backend en el mismo repositorio. El frontend es una SPA construida con React y el backend es una API REST con Express. Se comunican a través de HTTP usando JSON.
+GameLog es una aplicación fullstack con el frontend y el backend en el mismo repositorio. El frontend es una SPA construida con React y la API REST se sirve en Vercel como **Serverless Functions** en la carpeta `api/`. Se comunican a través de HTTP usando JSON.
 
 ```
 Usuario
   ↓
 React (SPA) — src/api/client.ts
   ↓  HTTP/JSON
-Express API — /api/v1/...
+API (Vercel Functions) — /api/v1/...
   ↓
-Store en memoria (services/store.ts)
+Store en memoria (api/_store.ts)
 ```
 
 ---
@@ -73,23 +73,14 @@ Todos los tipos están centralizados en `src/types/index.ts` y son compartidos e
 
 ## Backend
 
-### Arquitectura por capas
+### Implementación
 
 ```
-Request HTTP
-  ↓
-Routes (src/routes/)         — define las URLs y los verbos HTTP
-  ↓
-Controllers (src/controllers/) — extrae parámetros, valida, responde
-  ↓
-Services (src/services/)     — lógica de negocio y acceso a datos
-```
-
-Esta separación hace que el código sea más fácil de mantener: si se quisiera cambiar el store en memoria por una base de datos real, solo habría que tocar la capa de servicios.
+La API desplegada en Vercel está implementada como funciones en `api/` (por ejemplo `api/v1/games.ts`, `api/v1/games/[id].ts`, etc.). El objetivo es tener un backend sencillo y fácil de desplegar junto al frontend.
 
 ### Persistencia
 
-Los datos se guardan en memoria (arrays en `services/store.ts`). Esto es suficiente para el alcance de la práctica. Si se quisiera persistencia real se sustituiría el store por una integración con Supabase, MongoDB o cualquier otra base de datos sin tocar controllers ni routes.
+Los datos se guardan en memoria (arrays en `api/_store.ts`). En serverless esto puede no persistir entre ejecuciones. Para persistencia real habría que integrar una base de datos (Supabase, Postgres, etc.).
 
 ### Endpoints REST
 
@@ -109,4 +100,4 @@ Los datos se guardan en memoria (arrays en `services/store.ts`). Esto es suficie
 - Al crear una sesión, el backend suma las horas automáticamente al `totalHours` del juego
 - Al eliminar una sesión, el backend resta las horas del juego
 - Al eliminar un juego, el backend elimina también todas sus sesiones
-- CORS habilitado para que el frontend en localhost:5173 pueda llamar a la API en localhost:3001
+- En local, si se usa `server/`, se habilita CORS para que el frontend en `localhost:5173` pueda llamar a la API en `localhost:3001`

@@ -4,7 +4,7 @@
 
 GameLog es una aplicación fullstack para registrar y gestionar una biblioteca personal de videojuegos. Permite añadir juegos de cualquier plataforma, llevar un historial de sesiones con las horas jugadas, filtrar la biblioteca por estado y ver estadísticas en el dashboard.
 
-La app conecta un frontend en React con TypeScript y Tailwind con un backend en Node.js y Express, comunicándose mediante una API REST con arquitectura por capas.
+La app conecta un frontend en React con TypeScript y Tailwind con una API REST desplegada junto al frontend en Vercel (Serverless Functions), comunicándose mediante HTTP/JSON.
 
 ---
 
@@ -36,7 +36,7 @@ Separar routes, controllers y services puede parecer excesivo para un proyecto p
 Al compilar el frontend para producción con `npm run build`, TypeScript detectó dos imports que no se estaban usando (`StatusBadge` en Dashboard y `Platform` en GamesPage). En desarrollo no fallaba porque Vite es más permisivo, pero el compilador estricto los marcó como error. Se corrigieron eliminando los imports.
 
 ### CORS
-Al arrancar el frontend y el backend en puertos distintos (5173 y 3001), el navegador bloqueaba las peticiones por CORS. Se resolvió instalando el paquete `cors` en Express y añadiéndolo como middleware.
+Al arrancar el frontend y el backend Express en local en puertos distintos (5173 y 3001), el navegador bloqueaba las peticiones por CORS. Se resolvió instalando el paquete `cors` en Express y añadiéndolo como middleware. En producción (Vercel), el frontend llama a la API con `/api/v1` y no hay CORS entre dominios.
 
 ### Sincronización de horas
 Al eliminar una sesión había que restar las horas del juego correspondiente. Al principio olvidé implementar esta lógica en el servicio y las horas del juego no se actualizaban al borrar sesiones. Se corrigió en `services/store.ts` en la función `deleteSession`.
