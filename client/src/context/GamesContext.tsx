@@ -1,4 +1,4 @@
-import { createContext, useContext, useReducer, useEffect, type ReactNode } from 'react'
+import { createContext, useReducer, useEffect, type ReactNode } from 'react'
 import type { Game, Session, CreateGameDTO, UpdateGameDTO, CreateSessionDTO } from '../types'
 import * as api from '../api/client'
 
@@ -147,23 +147,26 @@ export function GamesProvider({ children }: { children: ReactNode }) {
       ? { ...existing, ...dto, updatedAt: new Date().toISOString() }
       : null
 
-    const game = await api.updateGame(id, dto).catch(() => patched)
-    if (!game) throw new Error('Game not found')
+    if (!patched) throw new Error('Game not found')
 
-    const nextGames = state.games.map(g => (g.id === game.id ? game : g))
+    const nextGames = state.games.map(g => (g.id === patched.id ? patched : g))
     saveToLS(LS_GAMES_KEY, nextGames)
-    dispatch({ type: 'UPDATE_GAME', payload: game })
+    dispatch({ type: 'UPDATE_GAME', payload: patched })
+
+    // Best-effort sync with serverless API (may not persist on Vercel)
+    void api.updateGame(id, dto).catch(() => undefined)
   }
 
   async function removeGame(id: string) {
-    await api.deleteGame(id).catch(() => undefined)
-
     const nextGames = state.games.filter(g => g.id !== id)
     const nextSessions = state.sessions.filter(s => s.gameId !== id)
     saveToLS(LS_GAMES_KEY, nextGames)
     saveToLS(LS_SESSIONS_KEY, nextSessions)
 
     dispatch({ type: 'DELETE_GAME', payload: id })
+
+    // Best-effort sync
+    void api.deleteGame(id).catch(() => undefined)
   }
 
   async function addSession(dto: CreateSessionDTO) {
@@ -193,8 +196,6 @@ export function GamesProvider({ children }: { children: ReactNode }) {
   }
 
   async function removeSession(id: string) {
-    await api.deleteSession(id).catch(() => undefined)
-
     const session = state.sessions.find(s => s.id === id)
     const nextSessions = state.sessions.filter(s => s.id !== id)
     const nextGames = session
@@ -207,6 +208,9 @@ export function GamesProvider({ children }: { children: ReactNode }) {
     saveToLS(LS_GAMES_KEY, nextGames)
 
     dispatch({ type: 'DELETE_SESSION', payload: id })
+
+    // Best-effort sync
+    void api.deleteSession(id).catch(() => undefined)
   }
 
   return (
@@ -216,8 +220,4 @@ export function GamesProvider({ children }: { children: ReactNode }) {
   )
 }
 
-export function useGames() {
-  const ctx = useContext(GamesContext)
-  if (!ctx) throw new Error('useGames must be used inside GamesProvider')
-  return ctx
-}
+export { GamesContext }
