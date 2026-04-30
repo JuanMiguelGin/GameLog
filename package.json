@@ -12,8 +12,10 @@
   "directories": {
     "doc": "docs"
   },
-  "devDependencies": {
-    "@vercel/node": "^5.7.13",
+  "dependencies": {
     "uuid": "^14.0.0"
+  },
+  "devDependencies": {
+    "@vercel/node": "^5.7.13"
   }
 }
