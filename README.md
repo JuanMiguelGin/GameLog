@@ -14,7 +14,7 @@
  
 | | URL |
 |---|---|
-| 🌐 App desplegada | https://game-log-mocha.vercel.app/games |
+| 🌐 App desplegada | https://game-log-mocha.vercel.app |
 | 🗂 Tablero Trello | https://trello.com/b/zMwL9r1f/gamelog |
  
 ---
@@ -26,7 +26,7 @@
 | Frontend | React 18 + TypeScript + Tailwind CSS |
 | Routing | React Router v6 |
 | Estado global | Context API + useReducer |
-| Backend | Node.js + Express + TypeScript |
+| Backend | Node.js + Express + TypeScript (Vercel Serverless Functions) |
 | Arquitectura | Capas: routes → controllers → services |
  
 ---
@@ -35,6 +35,12 @@
  
 ```
 gamelog/
+├── api/                     # Backend serverless (Vercel Functions)
+│   └── v1/
+│       ├── games.ts         # GET /api/v1/games, POST /api/v1/games
+│       ├── games/[id].ts    # GET, PATCH, DELETE /api/v1/games/:id
+│       ├── sessions.ts      # GET /api/v1/sessions, POST /api/v1/sessions
+│       └── sessions/[id].ts # DELETE /api/v1/sessions/:id
 ├── client/                  # Frontend React + Vite
 │   └── src/
 │       ├── api/             # Cliente de API tipado
@@ -44,7 +50,7 @@ gamelog/
 │       ├── pages/           # Páginas de la app
 │       ├── types/           # Tipos TypeScript
 │       └── utils/           # Utilidades
-├── server/                  # Backend Express
+├── server/                  # Backend Express (desarrollo local)
 │   └── src/
 │       ├── controllers/     # Lógica de cada endpoint
 │       ├── routes/          # Definición de rutas
@@ -54,18 +60,7 @@ gamelog/
  
 ---
  
-## 🚀 Cómo arrancarlo
- 
-### 1. Backend
- 
-```bash
-cd server
-npm install
-npm run dev
-# API disponible en http://localhost:3001
-```
- 
-### 2. Frontend
+## 🚀 Cómo arrancarlo en local
  
 ```bash
 cd client
@@ -74,7 +69,14 @@ npm run dev
 # App disponible en http://localhost:5173
 ```
  
-> Asegúrate de arrancar el backend **antes** que el frontend.
+Si quieres también el backend en local:
+ 
+```bash
+cd server
+npm install
+npm run dev
+# API disponible en http://localhost:3001
+```
  
 ---
  
