@@ -112,10 +112,10 @@ npm run dev
  
 ## Desplegar en Vercel
  
-### Frontend + Backend (todo en uno)
+### Frontend + Backend 
  
 1. Importa el repositorio desde [vercel.com](https://vercel.com)
-2. Deja el **Root Directory** vacío — Vercel leerá el `vercel.json` automáticamente
+2. Vercel leerá el `vercel.json` automáticamente
 3. No hace falta configurar variables de entorno — la API está en la misma URL
 4. Dale a **Deploy**
 ---
