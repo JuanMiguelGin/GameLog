@@ -2,13 +2,14 @@
 ![TypeScript](https://shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=TypeScript&logoColor=FFF)
 ![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
 ![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)
-![Express](https://img.shields.io/badge/Express-000000?style=for-the-badge&logo=express&logoColor=white)
+![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)
+![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
  
 # 🎮 GameLog
  
 > Tu biblioteca personal de videojuegos, sin importar la plataforma.
  
-Aplicación web fullstack para registrar y organizar tu colección de videojuegos. Lleva un seguimiento de tus horas de juego, el estado de cada título y tu historial de sesiones, todo en un solo lugar.
+Aplicación web fullstack para registrar y organizar tu colección de videojuegos. Lleva un seguimiento de tus horas de juego, el estado de cada título y tu historial de sesiones, con sistema de usuarios real y base de datos en la nube.
  
 | Despliegue | URL |
 |------------|-----|
@@ -19,9 +20,11 @@ Aplicación web fullstack para registrar y organizar tu colección de videojuego
  
 ## Características
  
+- Registro e inicio de sesión con email y contraseña mediante Firebase Auth
+- Cada usuario tiene su propia biblioteca privada asociada a su cuenta
 - Añade juegos de cualquier plataforma (Steam, PlayStation, Switch, Xbox...)
 - Filtra tu biblioteca por estado: jugando, completado, pendiente o abandonado
-- Registra sesiones de juego con fecha y horas, el total se calcula automáticamente
+- Registra, edita y elimina sesiones de juego — las horas se actualizan automáticamente
 - Dashboard con estadísticas: juegos totales, horas acumuladas y actividad reciente
 - Modo oscuro con preferencia guardada en el navegador
 - Diseño responsive adaptado a móvil y escritorio
@@ -35,19 +38,19 @@ Aplicación web fullstack para registrar y organizar tu colección de videojuego
 | TypeScript | Tipado estático en todo el proyecto |
 | Tailwind CSS | Estilos y diseño responsive |
 | React Router v6 | Navegación entre páginas |
-| Context API + useReducer | Estado global de juegos y sesiones |
+| Context API + useReducer | Estado global de juegos, sesiones y autenticación |
  
 | Backend | Uso |
 |---------|-----|
-| Node.js + Express | Servidor y API REST |
-| TypeScript | Tipado en controllers, services y routes |
-| Vercel Serverless Functions | Despliegue del backend en producción |
+| Firebase Auth | Registro e inicio de sesión con email y contraseña |
+| Supabase (PostgreSQL) | Base de datos relacional en la nube |
+| Vercel Serverless Functions | API REST desplegada junto al frontend |
  
 | Auxiliares | Uso |
 |------------|-----|
 | Vite | Bundler y servidor de desarrollo |
+| React Router | Enrutado client-side con página 404 |
 | uuid | Generación de IDs únicos |
-| localStorage | Caché de datos en el cliente |
  
 ---
  
@@ -64,18 +67,14 @@ GameLog/
 │       └── sessions/[id].ts    # DELETE /api/v1/sessions/:id
 ├── client/                     # Frontend React + Vite
 │   └── src/
-│       ├── api/                # Cliente de API tipado
+│       ├── api/                # Cliente de Supabase tipado
 │       ├── components/         # Componentes reutilizables
-│       ├── context/            # Context API (estado global y tema)
+│       ├── context/            # AuthContext, GamesContext, ThemeContext
 │       ├── hooks/              # Custom hooks
+│       ├── lib/                # Configuración de Firebase y Supabase
 │       ├── pages/              # Páginas de la app
 │       ├── types/              # Tipos TypeScript
 │       └── utils/              # Utilidades
-├── server/                     # Backend Express (desarrollo local)
-│   └── src/
-│       ├── controllers/
-│       ├── routes/
-│       └── services/
 ├── docs/                       # Documentación del proyecto
 ├── vercel.json                 # Configuración de despliegue
 └── README.md
@@ -87,37 +86,28 @@ GameLog/
  
 ```bash
 git clone https://github.com/JuanMiguelGin/GameLog.git
-cd GameLog
-```
- 
-Arrancar el frontend:
- 
-```bash
-cd client
+cd GameLog/client
 npm install
 npm run dev
-# App disponible en http://localhost:5173
 ```
  
-Arrancar el backend en local (opcional):
- 
-```bash
-cd server
-npm install
-npm run dev
-# API disponible en http://localhost:3001
-```
+Crea un archivo `.env` en `client/` con tus credenciales de Firebase y Supabase.
  
 ---
  
 ## Desplegar en Vercel
  
-### Frontend + Backend 
+### Frontend + Backend
  
 1. Importa el repositorio desde [vercel.com](https://vercel.com)
-2. Vercel leerá el `vercel.json` automáticamente
-3. No hace falta configurar variables de entorno — la API está en la misma URL
+2. Deja el **Root Directory** vacío — Vercel leerá el `vercel.json` automáticamente
+3. Añade las variables de entorno en **Settings → Environment Variables**
 4. Dale a **Deploy**
+### Base de datos (Supabase)
+ 
+1. Crea un proyecto en [supabase.com](https://supabase.com)
+2. Ejecuta el SQL de creación de tablas desde el **SQL Editor**
+3. Copia la **Project URL** y la **Publishable key** al `.env`
 ---
  
 *Desarrollado durante las prácticas en [Corner Estudios](https://www.corner-estudios.com) — Juan Miguel — 2026*
