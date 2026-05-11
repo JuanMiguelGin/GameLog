@@ -1,27 +1,7 @@
 import { createContext, useReducer, useEffect, type ReactNode } from 'react'
-import type { Game, Session, CreateGameDTO, UpdateGameDTO, CreateSessionDTO } from '../types'
-import * as api from '../api/client'
-
-const LS_GAMES_KEY = 'gamelog_games'
-const LS_SESSIONS_KEY = 'gamelog_sessions'
-
-function loadFromLS<T>(key: string): T | null {
-  try {
-    const raw = localStorage.getItem(key)
-    if (!raw) return null
-    return JSON.parse(raw) as T
-  } catch {
-    return null
-  }
-}
-
-function saveToLS<T>(key: string, value: T) {
-  try {
-    localStorage.setItem(key, JSON.stringify(value))
-  } catch {
-    // ignore quota / disabled storage
-  }
-}
+import type { Game, Session, CreateGameDTO, UpdateGameDTO, CreateSessionDTO, UpdateSessionDTO } from '../types'
+import * as db from '../api/supabase'
+import { useAuth } from './AuthContext'
 
 interface State {
   games: Game[]
@@ -33,13 +13,13 @@ interface State {
 type Action =
   | { type: 'SET_LOADING' }
   | { type: 'SET_ERROR'; payload: string }
-  | { type: 'SET_GAMES'; payload: Game[] }
+  | { type: 'SET_DATA'; payload: { games: Game[]; sessions: Session[] } }
   | { type: 'ADD_GAME'; payload: Game }
   | { type: 'UPDATE_GAME'; payload: Game }
   | { type: 'DELETE_GAME'; payload: string }
-  | { type: 'SET_SESSIONS'; payload: Session[] }
   | { type: 'ADD_SESSION'; payload: Session }
-  | { type: 'DELETE_SESSION'; payload: string }
+  | { type: 'UPDATE_SESSION'; payload: { session: Session; oldHours: number } }
+  | { type: 'DELETE_SESSION'; payload: { id: string; hours: number; gameId: string } }
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
@@ -47,35 +27,49 @@ function reducer(state: State, action: Action): State {
       return { ...state, loading: true, error: null }
     case 'SET_ERROR':
       return { ...state, loading: false, error: action.payload }
-    case 'SET_GAMES':
-      return { ...state, loading: false, games: action.payload }
+    case 'SET_DATA':
+      return { ...state, loading: false, games: action.payload.games, sessions: action.payload.sessions }
     case 'ADD_GAME':
-      return { ...state, games: [...state.games, action.payload] }
+      return { ...state, games: [action.payload, ...state.games] }
     case 'UPDATE_GAME':
-      return {
-        ...state,
-        games: state.games.map(g => (g.id === action.payload.id ? action.payload : g)),
-      }
+      return { ...state, games: state.games.map(g => g.id === action.payload.id ? action.payload : g) }
     case 'DELETE_GAME':
       return {
         ...state,
         games: state.games.filter(g => g.id !== action.payload),
         sessions: state.sessions.filter(s => s.gameId !== action.payload),
       }
-    case 'SET_SESSIONS':
-      return { ...state, sessions: action.payload }
-    case 'ADD_SESSION':
+    case 'ADD_SESSION': {
+      const session = action.payload
       return {
         ...state,
-        sessions: [action.payload, ...state.sessions],
+        sessions: [session, ...state.sessions],
+        games: state.games.map(g =>
+          g.id === session.gameId ? { ...g, totalHours: +(g.totalHours + session.hours).toFixed(1) } : g
+        ),
+      }
+    }
+    case 'UPDATE_SESSION': {
+      const { session, oldHours } = action.payload
+      const delta = session.hours - oldHours
+      return {
+        ...state,
+        sessions: state.sessions.map(s => s.id === session.id ? session : s),
+        games: state.games.map(g =>
+          g.id === session.gameId ? { ...g, totalHours: +(g.totalHours + delta).toFixed(1) } : g
+        ),
+      }
+    }
+    case 'DELETE_SESSION':
+      return {
+        ...state,
+        sessions: state.sessions.filter(s => s.id !== action.payload.id),
         games: state.games.map(g =>
           g.id === action.payload.gameId
-            ? { ...g, totalHours: g.totalHours + action.payload.hours }
+            ? { ...g, totalHours: +Math.max(0, g.totalHours - action.payload.hours).toFixed(1) }
             : g
         ),
       }
-    case 'DELETE_SESSION':
-      return { ...state, sessions: state.sessions.filter(s => s.id !== action.payload) }
     default:
       return state
   }
@@ -86,135 +80,64 @@ interface ContextValue extends State {
   editGame: (id: string, dto: UpdateGameDTO) => Promise<void>
   removeGame: (id: string) => Promise<void>
   addSession: (dto: CreateSessionDTO) => Promise<void>
-  removeSession: (id: string) => Promise<void>
+  editSession: (id: string, dto: UpdateSessionDTO, oldHours: number, gameId: string) => Promise<void>
+  removeSession: (id: string, hours: number, gameId: string) => Promise<void>
 }
 
 const GamesContext = createContext<ContextValue | null>(null)
 
 export function GamesProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth()
   const [state, dispatch] = useReducer(reducer, {
-    games: [],
-    sessions: [],
-    loading: false,
-    error: null,
+    games: [], sessions: [], loading: false, error: null,
   })
 
   useEffect(() => {
-    dispatch({ type: 'SET_LOADING' })
-
-    const cachedGames = loadFromLS<Game[]>(LS_GAMES_KEY)
-    const cachedSessions = loadFromLS<Session[]>(LS_SESSIONS_KEY)
-    if (cachedGames && cachedSessions) {
-      dispatch({ type: 'SET_GAMES', payload: cachedGames })
-      dispatch({ type: 'SET_SESSIONS', payload: cachedSessions })
+    if (!user) {
+      dispatch({ type: 'SET_DATA', payload: { games: [], sessions: [] } })
       return
     }
-
-    Promise.all([api.getGames(), api.getSessions()])
-      .then(([games, sessions]) => {
-        saveToLS(LS_GAMES_KEY, games)
-        saveToLS(LS_SESSIONS_KEY, sessions)
-        dispatch({ type: 'SET_GAMES', payload: games })
-        dispatch({ type: 'SET_SESSIONS', payload: sessions })
-      })
+    dispatch({ type: 'SET_LOADING' })
+    Promise.all([db.getGames(user.uid), db.getSessions(user.uid)])
+      .then(([games, sessions]) => dispatch({ type: 'SET_DATA', payload: { games, sessions } }))
       .catch(err => dispatch({ type: 'SET_ERROR', payload: err.message }))
-  }, [])
+  }, [user])
 
   async function addGame(dto: CreateGameDTO) {
-    const game = await api.createGame(dto).catch(() => {
-      const now = new Date().toISOString()
-      const id =
-        typeof crypto !== 'undefined' && 'randomUUID' in crypto
-          ? crypto.randomUUID()
-          : `${Date.now()}-${Math.random().toString(16).slice(2)}`
-      return {
-        id,
-        ...dto,
-        totalHours: 0,
-        createdAt: now,
-        updatedAt: now,
-      } as Game
-    })
-
-    const nextGames = [...state.games, game]
-    saveToLS(LS_GAMES_KEY, nextGames)
+    if (!user) return
+    const game = await db.createGame(user.uid, dto)
     dispatch({ type: 'ADD_GAME', payload: game })
   }
 
   async function editGame(id: string, dto: UpdateGameDTO) {
-    const existing = state.games.find(g => g.id === id)
-    const patched: Game | null = existing
-      ? { ...existing, ...dto, updatedAt: new Date().toISOString() }
-      : null
-
-    if (!patched) throw new Error('Game not found')
-
-    const nextGames = state.games.map(g => (g.id === patched.id ? patched : g))
-    saveToLS(LS_GAMES_KEY, nextGames)
-    dispatch({ type: 'UPDATE_GAME', payload: patched })
-
-    // Best-effort sync with serverless API (may not persist on Vercel)
-    void api.updateGame(id, dto).catch(() => undefined)
+    const game = await db.updateGame(id, dto)
+    dispatch({ type: 'UPDATE_GAME', payload: game })
   }
 
   async function removeGame(id: string) {
-    const nextGames = state.games.filter(g => g.id !== id)
-    const nextSessions = state.sessions.filter(s => s.gameId !== id)
-    saveToLS(LS_GAMES_KEY, nextGames)
-    saveToLS(LS_SESSIONS_KEY, nextSessions)
-
+    await db.deleteGame(id)
     dispatch({ type: 'DELETE_GAME', payload: id })
-
-    // Best-effort sync
-    void api.deleteGame(id).catch(() => undefined)
   }
 
   async function addSession(dto: CreateSessionDTO) {
-    const session = await api.createSession(dto).catch(() => {
-      const id =
-        typeof crypto !== 'undefined' && 'randomUUID' in crypto
-          ? crypto.randomUUID()
-          : `${Date.now()}-${Math.random().toString(16).slice(2)}`
-      return {
-        id,
-        gameId: dto.gameId,
-        gameTitle: state.games.find(g => g.id === dto.gameId)?.title ?? 'Unknown',
-        hours: dto.hours,
-        date: dto.date,
-        createdAt: new Date().toISOString(),
-      } as Session
-    })
-
-    const nextSessions = [session, ...state.sessions]
-    const nextGames = state.games.map(g =>
-      g.id === session.gameId ? { ...g, totalHours: g.totalHours + session.hours } : g
-    )
-    saveToLS(LS_SESSIONS_KEY, nextSessions)
-    saveToLS(LS_GAMES_KEY, nextGames)
-
+    if (!user) return
+    const gameTitle = state.games.find(g => g.id === dto.gameId)?.title ?? ''
+    const session = await db.createSession(user.uid, dto, gameTitle)
     dispatch({ type: 'ADD_SESSION', payload: session })
   }
 
-  async function removeSession(id: string) {
-    const session = state.sessions.find(s => s.id === id)
-    const nextSessions = state.sessions.filter(s => s.id !== id)
-    const nextGames = session
-      ? state.games.map(g =>
-          g.id === session.gameId ? { ...g, totalHours: Math.max(0, g.totalHours - session.hours) } : g
-        )
-      : state.games
+  async function editSession(id: string, dto: UpdateSessionDTO, oldHours: number, gameId: string) {
+    const session = await db.updateSession(id, dto, oldHours, gameId)
+    dispatch({ type: 'UPDATE_SESSION', payload: { session, oldHours } })
+  }
 
-    saveToLS(LS_SESSIONS_KEY, nextSessions)
-    saveToLS(LS_GAMES_KEY, nextGames)
-
-    dispatch({ type: 'DELETE_SESSION', payload: id })
-
-    // Best-effort sync
-    void api.deleteSession(id).catch(() => undefined)
+  async function removeSession(id: string, hours: number, gameId: string) {
+    await db.deleteSession(id, hours, gameId)
+    dispatch({ type: 'DELETE_SESSION', payload: { id, hours, gameId } })
   }
 
   return (
-    <GamesContext.Provider value={{ ...state, addGame, editGame, removeGame, addSession, removeSession }}>
+    <GamesContext.Provider value={{ ...state, addGame, editGame, removeGame, addSession, editSession, removeSession }}>
       {children}
     </GamesContext.Provider>
   )

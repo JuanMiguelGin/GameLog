@@ -62,7 +62,6 @@ export default function GameDetail() {
         </div>
       ) : (
         <div className="space-y-4">
-          {/* Game header card */}
           <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4 md:p-6">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-start gap-3">
@@ -108,7 +107,6 @@ export default function GameDetail() {
             )}
           </div>
  
-          {/* Sessions */}
           <div>
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-sm font-medium text-gray-500 dark:text-gray-400">Historial de sesiones</h2>
@@ -143,7 +141,7 @@ export default function GameDetail() {
                       <p className="text-xs text-gray-400 dark:text-gray-500">{formatDate(session.date)}</p>
                     </div>
                     <button
-                      onClick={() => removeSession(session.id)}
+                      onClick={() => removeSession(session.id, session.hours, session.gameId)}
                       className="text-xs text-red-400 hover:text-red-600 shrink-0"
                     >
                       Eliminar
