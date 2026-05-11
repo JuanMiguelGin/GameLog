@@ -1,5 +1,5 @@
 export type GameStatus = 'playing' | 'completed' | 'abandoned' | 'pending'
-
+ 
 export type Platform =
   | 'PC (Steam)'
   | 'PC (Epic)'
@@ -8,7 +8,7 @@ export type Platform =
   | 'Nintendo Switch'
   | 'Mobile'
   | 'Other'
-
+ 
 export type Genre =
   | 'RPG'
   | 'Action'
@@ -23,7 +23,7 @@ export type Genre =
   | 'FPS'
   | 'Fighting'
   | 'Other'
-
+ 
 export interface Game {
   id: string
   title: string
@@ -35,7 +35,7 @@ export interface Game {
   createdAt: string
   updatedAt: string
 }
-
+ 
 export interface Session {
   id: string
   gameId: string
@@ -44,7 +44,7 @@ export interface Session {
   date: string
   createdAt: string
 }
-
+ 
 export interface CreateGameDTO {
   title: string
   platform: Platform
@@ -52,7 +52,7 @@ export interface CreateGameDTO {
   status: GameStatus
   notes?: string
 }
-
+ 
 export interface UpdateGameDTO {
   title?: string
   platform?: Platform
@@ -60,18 +60,23 @@ export interface UpdateGameDTO {
   status?: GameStatus
   notes?: string
 }
-
+ 
 export interface CreateSessionDTO {
   gameId: string
   hours: number
   date: string
 }
-
+ 
+export interface UpdateSessionDTO {
+  hours: number
+  date: string
+}
+ 
 export interface ApiResponse<T> {
   data: T
   message?: string
 }
-
+ 
 export interface ApiError {
   error: string
   message: string
